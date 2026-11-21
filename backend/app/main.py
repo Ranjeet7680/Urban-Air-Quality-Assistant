@@ -2,12 +2,18 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from app.core.config import settings
 from app.database.session import engine, Base, SessionLocal
 from app.api.api_v1 import api_router
 from app.models.models import User, UserProfile, UserPreferences
 from app.core.security import get_password_hash
 from app.services.alert_service import AlertService
+from app.core.middleware import (
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    PerformanceTelemetryMiddleware
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -100,6 +106,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Production Security & Efficiency Middlewares
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=180)
+app.add_middleware(PerformanceTelemetryMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

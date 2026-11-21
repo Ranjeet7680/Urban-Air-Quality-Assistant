@@ -100,8 +100,10 @@ export const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* HERO SECTION */}
-      <section id="home" className="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden">
+      {/* MAIN ACCESSIBLE CONTENT */}
+      <main id="main-content" tabIndex={-1} className="outline-none">
+        {/* HERO SECTION */}
+        <section id="home" className="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden">
         {/* Subtle Ambient Background Gradients */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-blue-600/15 via-cyan-500/15 to-emerald-500/10 blur-[120px] pointer-events-none rounded-full" />
 
@@ -629,6 +631,7 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      </main>
 
       {/* SECTION G — FOOTER */}
       <Footer />

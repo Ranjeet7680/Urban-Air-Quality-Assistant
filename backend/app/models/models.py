@@ -95,7 +95,7 @@ class AirQualityMeasurement(Base):
     __tablename__ = "air_quality_measurements"
 
     id = Column(Integer, primary_key=True, index=True)
-    station_id = Column(Integer, ForeignKey("monitoring_stations.id"), nullable=True)
+    station_id = Column(Integer, ForeignKey("monitoring_stations.id"), nullable=True, index=True)
     city = Column(String(100), index=True, nullable=False)
     observation_time = Column(DateTime, index=True, nullable=False)
     aqi = Column(Integer, nullable=False)
@@ -106,7 +106,7 @@ class AirQualityMeasurement(Base):
     humidity_percent = Column(Float, nullable=True)
     wind_speed_kmh = Column(Float, nullable=True)
     wind_direction_deg = Column(Float, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     station = relationship("MonitoringStation", back_populates="measurements")
     pollutants = relationship("PollutantMeasurement", back_populates="measurement", cascade="all, delete-orphan")
@@ -115,8 +115,8 @@ class PollutantMeasurement(Base):
     __tablename__ = "pollutant_measurements"
 
     id = Column(Integer, primary_key=True, index=True)
-    measurement_id = Column(Integer, ForeignKey("air_quality_measurements.id", ondelete="CASCADE"), nullable=False)
-    pollutant_code = Column(String(20), nullable=False)  # pm2_5, pm10, no2, so2, co, o3
+    measurement_id = Column(Integer, ForeignKey("air_quality_measurements.id", ondelete="CASCADE"), nullable=False, index=True)
+    pollutant_code = Column(String(20), nullable=False, index=True)  # pm2_5, pm10, no2, so2, co, o3
     pollutant_name = Column(String(100), nullable=False)
     concentration = Column(Float, nullable=False)
     unit = Column(String(20), default="µg/m³")
@@ -147,15 +147,15 @@ class EnvironmentalAlert(Base):
     __tablename__ = "environmental_alerts"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     title = Column(String(255), nullable=False)
     message = Column(Text, nullable=False)
     severity = Column(String(50), default="warning")  # "info", "warning", "critical", "hazardous"
     alert_type = Column(String(50), default="high_aqi")  # "high_aqi", "pm25_spike", "forecast_warning", "sensitive_group"
     location_name = Column(String(100), nullable=False)
     aqi_value = Column(Integer, nullable=True)
-    is_read = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    is_read = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     user = relationship("User", back_populates="alerts")
 
@@ -163,9 +163,9 @@ class AIConversation(Base):
     __tablename__ = "ai_conversations"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     title = Column(String(255), default="Air Quality Consultation")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", back_populates="conversations")
@@ -175,11 +175,11 @@ class AIMessage(Base):
     __tablename__ = "ai_messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    conversation_id = Column(Integer, ForeignKey("ai_conversations.id", ondelete="CASCADE"), nullable=False)
+    conversation_id = Column(Integer, ForeignKey("ai_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
     sender = Column(String(20), nullable=False)  # "user", "assistant"
     content = Column(Text, nullable=False)
     measured_data_context = Column(JSON, nullable=True)  # Snapshot of current AQI & pollutants attached to query
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     conversation = relationship("AIConversation", back_populates="messages")
 
@@ -187,7 +187,7 @@ class GeneratedReport(Base):
     __tablename__ = "generated_reports"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     title = Column(String(255), nullable=False)
     report_type = Column(String(50), default="daily")  # "daily", "weekly", "monthly", "location_comparison"
     location_name = Column(String(100), nullable=False)
@@ -201,7 +201,7 @@ class GeneratedReport(Base):
     data_source = Column(String(100), default="Open-Meteo & Copernicus CAMS")
     file_path = Column(String(500), nullable=True)
     status = Column(String(50), default="ready")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     user = relationship("User", back_populates="reports")
 
@@ -209,11 +209,11 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    action = Column(String(100), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    action = Column(String(100), nullable=False, index=True)
     resource = Column(String(100), nullable=False)
     details = Column(Text, nullable=True)
     ip_address = Column(String(50), default="127.0.0.1")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     user = relationship("User", back_populates="audit_logs")

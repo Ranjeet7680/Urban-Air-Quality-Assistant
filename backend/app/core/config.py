@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DEFAULT_SQLITE_PATH = os.path.join(BASE_DIR, "urban_air_quality.db").replace("\\", "/")
+
 class Settings(BaseModel):
     PROJECT_NAME: str = "Urban Air Quality Assistant"
     API_V1_STR: str = "/api"
@@ -13,7 +16,7 @@ class Settings(BaseModel):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./urban_air_quality.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_SQLITE_PATH}")
     
     # Gemini AI API Key
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")

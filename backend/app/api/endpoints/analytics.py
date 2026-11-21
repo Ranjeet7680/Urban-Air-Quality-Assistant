@@ -3,6 +3,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Query
 from app.services.air_quality_service import AirQualityService
 from app.environmental_data.stations import GLOBAL_CITIES
+from app.environmental_data.aqi_calculator import get_aqi_category_and_color
 
 router = APIRouter()
 

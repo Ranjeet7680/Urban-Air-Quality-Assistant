@@ -9,27 +9,27 @@ from app.api.deps import get_current_user_optional, get_current_user
 router = APIRouter()
 
 @router.get("/", response_model=List[AlertOut])
-def list_alerts(db: Session = Depends(get_db), current_user = Depends(get_current_user_optional)):
+def list_alerts(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     user_id = current_user.id if current_user else None
     # Ensure some initial alerts exist
     AlertService.seed_initial_alerts(db)
     return AlertService.get_user_alerts(db, user_id=user_id)
 
 @router.put("/{alert_id}/read")
-def mark_read(alert_id: int, db: Session = Depends(get_db)):
+def mark_read(alert_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     success = AlertService.mark_as_read(db, alert_id)
     if not success:
         raise HTTPException(status_code=404, detail="Alert not found")
     return {"message": "Alert marked as read"}
 
 @router.post("/mark-all-read")
-def mark_all_read(db: Session = Depends(get_db), current_user = Depends(get_current_user_optional)):
+def mark_all_read(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     user_id = current_user.id if current_user else None
     count = AlertService.mark_all_as_read(db, user_id=user_id)
     return {"message": f"{count} alerts marked as read"}
 
 @router.post("/test-trigger", response_model=AlertOut)
-def trigger_test_alert(db: Session = Depends(get_db), current_user = Depends(get_current_user_optional)):
+def trigger_test_alert(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     user_id = current_user.id if current_user else None
     city = current_user.city if current_user and current_user.city else "New York"
     return AlertService.create_alert(

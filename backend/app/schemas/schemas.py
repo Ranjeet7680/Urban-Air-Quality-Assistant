@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 # Auth Schemas
 class UserBase(BaseModel):
@@ -56,8 +56,7 @@ class UserOut(BaseModel):
     profile: Optional[UserProfileOut] = None
     preferences: Optional[UserPreferencesOut] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 Token.model_rebuild()
 
@@ -191,8 +190,7 @@ class AlertOut(BaseModel):
     is_read: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AlertPreferenceUpdate(BaseModel):
     notification_email: Optional[bool] = None
@@ -236,8 +234,7 @@ class ReportOut(BaseModel):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Admin Schemas
 class AdminDashboardOut(BaseModel):

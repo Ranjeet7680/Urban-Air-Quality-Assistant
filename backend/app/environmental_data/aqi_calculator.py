@@ -46,6 +46,18 @@ def calculate_sub_index(conc: float, breakpoints: list) -> int:
         return 500
     return 0
 
+def calculate_pollutant_sub_index(pollutant: str, concentration: float) -> int:
+    p = pollutant.lower().replace('.', '_').replace('-', '_')
+    if "pm2" in p:
+        return calculate_sub_index(concentration, EPA_PM25_BREAKPOINTS)
+    elif "pm10" in p:
+        return calculate_sub_index(concentration, EPA_PM10_BREAKPOINTS)
+    elif "o3" in p or "ozone" in p:
+        return calculate_sub_index(concentration, EPA_O3_BREAKPOINTS)
+    elif "no2" in p:
+        return calculate_sub_index(concentration, EPA_NO2_BREAKPOINTS)
+    return max(0, min(500, int(concentration)))
+
 def get_aqi_category_and_color(aqi: int, standard: str = "US_EPA") -> Tuple[str, str, str]:
     """
     Returns (category_name, hex_color, health_summary)
