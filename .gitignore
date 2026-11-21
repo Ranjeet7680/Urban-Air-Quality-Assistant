@@ -1,0 +1,36 @@
+# Node.js dependencies & builds
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.vite/
+frontend/.vite/
+
+# Python cache & virtualenvs
+__pycache__/
+backend/__pycache__/
+backend/app/**/__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+
+# Environment variables
+.env
+backend/.env
+frontend/.env.local
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# SQLite databases (generated at runtime)
+*.db-journal
+backend/*.db-journal

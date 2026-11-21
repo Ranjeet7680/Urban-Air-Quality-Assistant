@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: urban-air-backend
+    restart: always
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=sqlite:///./urban_air_quality.db
+      - SECRET_KEY=super-secret-jwt-encryption-key-for-urban-air-saas-2026
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - ./backend/urban_air_quality.db:/app/urban_air_quality.db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: urban-air-frontend
+    restart: always
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
