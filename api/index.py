@@ -24,9 +24,80 @@ if os.environ.get("VERCEL"):
 
 from app.main import app
 
-# Ensure tables are ready for serverless requests
+# Ensure tables and demo accounts are ready for serverless requests
 try:
-    from app.database.session import Base, engine
+    from app.database.session import Base, engine, SessionLocal
+    from app.models.models import User, UserProfile, UserPreferences
+    from app.core.security import get_password_hash
+    from app.services.alert_service import AlertService
+
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        # Demo Admin
+        admin_user = db.query(User).filter(User.email == "admin@airsense.eco").first()
+        if not admin_user:
+            admin_user = User(
+                email="admin@airsense.eco",
+                hashed_password=get_password_hash("AdminPass123!"),
+                full_name="Dr. Elena Vance (Lead Environmental Architect)",
+                city="New York",
+                role="admin",
+                is_active=True,
+                is_verified=True
+            )
+            db.add(admin_user)
+            db.commit()
+            db.refresh(admin_user)
+
+            p = UserProfile(
+                user_id=admin_user.id,
+                preferred_aqi_standard="US_EPA",
+                bio="Chief atmospheric scientist and platform supervisor."
+            )
+            pref = UserPreferences(
+                user_id=admin_user.id,
+                favorite_cities=["New York", "London", "Tokyo", "Delhi", "Paris"],
+                aqi_alert_threshold=80
+            )
+            db.add(p)
+            db.add(pref)
+            db.commit()
+
+        # Demo User
+        demo_user = db.query(User).filter(User.email == "sarah.chen@urbanair.io").first()
+        if not demo_user:
+            demo_user = User(
+                email="sarah.chen@urbanair.io",
+                hashed_password=get_password_hash("UserPass123!"),
+                full_name="Sarah Chen",
+                city="London",
+                role="user",
+                is_active=True,
+                is_verified=True
+            )
+            db.add(demo_user)
+            db.commit()
+            db.refresh(demo_user)
+
+            p2 = UserProfile(
+                user_id=demo_user.id,
+                preferred_aqi_standard="US_EPA",
+                bio="Health conscious runner & clean air advocate."
+            )
+            pref2 = UserPreferences(
+                user_id=demo_user.id,
+                favorite_cities=["London", "Paris", "New York"],
+                aqi_alert_threshold=100
+            )
+            db.add(p2)
+            db.add(pref2)
+            db.commit()
+
+        AlertService.seed_initial_alerts(db)
+    except Exception as err:
+        print(f"Error seeding DB: {err}")
+    finally:
+        db.close()
 except Exception as e:
     print(f"Warning: could not run Base.metadata.create_all: {e}")
