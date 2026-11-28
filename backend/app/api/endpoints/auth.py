@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -21,56 +22,62 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     total_users = db.query(User).count()
     role = "admin" if total_users == 0 else "user"
 
-    # Create user
-    user = User(
-        email=user_in.email,
-        hashed_password=get_password_hash(user_in.password),
-        full_name=user_in.full_name,
-        city=user_in.city or "New York",
-        role=role,
-        is_active=True,
-        is_verified=True
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    try:
+        # Create user
+        user = User(
+            email=user_in.email,
+            hashed_password=get_password_hash(user_in.password),
+            full_name=user_in.full_name,
+            city=user_in.city or "New York",
+            role=role,
+            is_active=True,
+            is_verified=True
+        )
+        db.add(user)
+        db.flush()
 
-    # Create profile and preferences
-    profile = UserProfile(
-        user_id=user.id,
-        preferred_aqi_standard="US_EPA",
-        health_conditions=[]
-    )
-    prefs = UserPreferences(
-        user_id=user.id,
-        favorite_cities=[user.city or "New York", "London", "Delhi"],
-        interests=["Air pollution", "Health awareness", "Outdoor activities"]
-    )
-    db.add(profile)
-    db.add(prefs)
+        # Create profile and preferences
+        profile = UserProfile(
+            user_id=user.id,
+            preferred_aqi_standard="US_EPA",
+            health_conditions=[]
+        )
+        prefs = UserPreferences(
+            user_id=user.id,
+            favorite_cities=[user.city or "New York", "London", "Delhi"],
+            interests=["Air pollution", "Health awareness", "Outdoor activities"]
+        )
+        db.add(profile)
+        db.add(prefs)
 
-    # Audit log
-    audit = AuditLog(
-        user_id=user.id,
-        action="USER_REGISTRATION",
-        resource="AUTH",
-        details=f"User registered with email {user.email}"
-    )
-    db.add(audit)
-    db.commit()
-    db.refresh(user)
+        # Audit log
+        audit = AuditLog(
+            user_id=user.id,
+            action="USER_REGISTRATION",
+            resource="AUTH",
+            details=f"User registered with email {user.email}"
+        )
+        db.add(audit)
+        db.commit()
+        db.refresh(user)
 
-    # Seed welcome alert
-    AlertService.create_alert(
-        db=db,
-        user_id=user.id,
-        title="Welcome to Urban Air Quality Assistant",
-        message=f"Real-time environmental monitoring is now active for {user.city}. You will receive proactive warnings if AQI exceeds your configured threshold.",
-        severity="info",
-        alert_type="welcome",
-        location_name=user.city or "New York",
-        aqi_value=42
-    )
+        # Seed welcome alert
+        AlertService.create_alert(
+            db=db,
+            user_id=user.id,
+            title="Welcome to Urban Air Quality Assistant",
+            message=f"Real-time environmental monitoring is now active for {user.city}. You will receive proactive warnings if AQI exceeds your configured threshold.",
+            severity="info",
+            alert_type="welcome",
+            location_name=user.city or "New York",
+            aqi_value=42
+        )
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(exc)}"
+        )
 
     access_token = create_access_token(subject=user.id)
     return {
@@ -112,12 +119,13 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
 def google_login(payload: GoogleLoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     if not user:
-        # Create Google-authenticated user
+        # Create Google-authenticated user with unique, cryptographically secure unguessable secret
         total_users = db.query(User).count()
         role = "admin" if total_users == 0 else "user"
+        random_pwd = secrets.token_urlsafe(32)
         user = User(
             email=payload.email,
-            hashed_password=get_password_hash("google-oauth-secure-random-pass"),
+            hashed_password=get_password_hash(random_pwd),
             full_name=payload.full_name,
             city=payload.city or "New York",
             role=role,

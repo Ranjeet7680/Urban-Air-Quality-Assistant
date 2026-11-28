@@ -380,7 +380,7 @@ async def get_audio_briefing(
     Generate structured atmospheric script for browser SpeechSynthesis audio briefing.
     """
     aq = await AirQualityService.get_current_air_quality(city, standard)
-    hour = datetime.utcnow().hour
+    hour = datetime.now(timezone.utc).hour
     greeting = "Good morning" if 5 <= hour < 12 else ("Good afternoon" if 12 <= hour < 18 else "Good evening")
     
     city_name = aq.get("city", city)

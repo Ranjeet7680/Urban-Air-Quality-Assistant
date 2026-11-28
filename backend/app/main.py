@@ -1,6 +1,7 @@
-import os
+import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from app.core.config import settings
@@ -14,6 +15,13 @@ from app.core.middleware import (
     RateLimitMiddleware,
     PerformanceTelemetryMiddleware
 )
+
+# Structured production logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
+)
+logger = logging.getLogger("urban_air_backend")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -98,12 +106,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS configuration
+# CORS configuration (secure explicit origins + Vercel deployment preview pattern)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
@@ -112,6 +121,17 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware, requests_per_minute=180)
 app.add_middleware(PerformanceTelemetryMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+@app.exception_handler(Exception)
+async def global_unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled Server Error on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "detail": "Internal environmental processing error occurred. Please try again shortly.",
+            "path": request.url.path
+        }
+    )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

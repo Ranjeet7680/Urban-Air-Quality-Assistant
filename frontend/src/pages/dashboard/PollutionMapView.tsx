@@ -39,9 +39,6 @@ export const PollutionMapView: React.FC = () => {
         if (isMounted) {
           setStations(data);
           setIsLoadingStations(false);
-          // Auto select first station of active city
-          const cityStation = data.find(s => s.city.toLowerCase() === selectedCity.toLowerCase()) || data[0];
-          if (cityStation) setSelectedStation(cityStation);
         }
       })
       .catch((err) => {
@@ -52,6 +49,13 @@ export const PollutionMapView: React.FC = () => {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (stations.length > 0) {
+      const cityStation = stations.find(s => s.city.toLowerCase() === selectedCity.toLowerCase()) || stations[0];
+      if (cityStation) setSelectedStation(cityStation);
+    }
+  }, [stations, selectedCity]);
 
   // Initialize and update Leaflet Map
   useEffect(() => {
@@ -138,7 +142,7 @@ export const PollutionMapView: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [theme, stations, selectedCity, airQuality]);
+  }, [theme, stations, selectedCity, airQuality, setSelectedCity]);
 
   const mapLegend = [
     { label: '0-50 Good', color: 'bg-emerald-500' },

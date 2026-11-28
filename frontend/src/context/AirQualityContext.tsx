@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { AirQualityData, EnvironmentalAlert } from '../types';
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
@@ -33,9 +33,9 @@ export const AirQualityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (user?.city && user.city !== selectedCity) {
       setSelectedCity(user.city);
     }
-  }, [user?.city]);
+  }, [user?.city, selectedCity]);
 
-  const loadAirQuality = async () => {
+  const loadAirQuality = useCallback(async () => {
     setIsLoadingAQ(true);
     try {
       const data = await api.getCurrentAirQuality(selectedCity, selectedStandard);
@@ -45,7 +45,7 @@ export const AirQualityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } finally {
       setIsLoadingAQ(false);
     }
-  };
+  }, [selectedCity, selectedStandard]);
 
   const loadAlerts = async () => {
     try {
@@ -58,7 +58,7 @@ export const AirQualityProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     loadAirQuality();
-  }, [selectedCity, selectedStandard]);
+  }, [loadAirQuality]);
 
   useEffect(() => {
     loadAlerts();

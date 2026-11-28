@@ -21,13 +21,13 @@ class Settings(BaseModel):
     # Gemini AI API Key
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     
-    # CORS
+    # CORS Origins (Restricted strictly without wildcards for credentials compliance)
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        "*",
+        "https://urban-air-quality-assistant-delta.vercel.app",
     ]
 
 settings = Settings()
